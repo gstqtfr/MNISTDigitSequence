@@ -1,5 +1,5 @@
+#-*- coding: utf-8 -*-
 #!/usr/bin/env python
-
 
 # do we include test images?
 # yeah, because they're being concatenated, so we can
@@ -10,6 +10,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import uuid
+import argparse
 
 # we load the MNIST database ...
 # ... and cache it locally for efficent access
@@ -187,7 +188,7 @@ def check_input_type(digits):
     """
     Check whether the input list is composed of integers.
     :param digits: list to be tested
-    :return:
+    :return: True if the list is valid, else False
     """
     for digit in digits:
         try:
@@ -246,8 +247,8 @@ def generate_numbers_sequence(digits, spacing_range, image_width):
     as floating point 32bits numpy arrays with a scale ranging from 0 (black) to
     1 (white), the first dimension corresponding to the height and the second
     dimension to the width.
-    :param spacing_range:
-    :param image_width:
+    :param spacing_range: tuple containing the minimum and maximum values for spacing between images
+    :param image_width: required width of images
     """
 
     ## TODO: check the params for any obvious nonsense or frivolity
@@ -272,15 +273,14 @@ def generate_numbers_sequence(digits, spacing_range, image_width):
         shrinkage = mnist_dim - image_width
         mnist_images = [shrink_matrix(_img, shrinkage) for _img in initial_mnist_images]
 
-
     if grow:
         growth = image_width - mnist_dim
         mnist_images = [grow_matrix(_img, growth) for _img in initial_mnist_images]
 
+    # if it's both grow and shrink, we're in trouble ...
+
     if not grow and not shrink:
         mnist_images = initial_mnist_images
-
-    ## TODO: else, copy initial_mnist_images to mnist_images
 
     # get our min, max parameters for the random spacing
     low =  min(spacing_range)
@@ -307,3 +307,61 @@ def generate_numbers_sequence(digits, spacing_range, image_width):
     plt.savefig(unique_filename, bbox_inches='tight')
 
     return concat_image
+
+
+# parse the command-line arguments
+def parse_args():
+    desc = "Data augmentation functions for MNIST: creates an image from a sequence of digits"
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('--digits', type=str, required=True,
+                        help='Comma-separated list of digits to get from MNIST')
+    parser.add_argument('--min', type=int, default=3, required=True,
+                        help='Minimum value for spacing between images in pixels')
+    parser.add_argument('--max', type=int, default=23, required=True,
+                        help='Maximum value for immage spacing')
+    parser.add_argument('--width', type=int, default=28, required=True,
+                        help='Width of the images (default is MNIST\'s 28)')
+    return check_args(parser.parse_args())
+
+# check for any errors in cmd-line args
+def check_args(args):
+
+    # arg is: --min
+    assert args.min >= 1, 'minimum spacing must be larger than or equal to one'
+    # --max
+    assert args.max > 1, 'maximum spacing must be larger than one'
+    # --max
+    assert args.max > args.min, 'maximum spacing must be larger than minimum spacing'
+    # --width
+    assert args.width >=1, 'width must be larger than or equal to one'
+
+    # assert len(args.digits) > 0, 'digits should be a comma-separated list of numbers, e.g. 0,5,6,4,3'
+
+    # TODO: check digits!
+    # we *should* have a comma-sep'd list of integers
+    potential_list = args.digits.split(',')
+
+    assert check_input_type(
+        potential_list) == True, 'digits should be a comma-separated list of numbers, e.g. 0,5,6,4,3'
+
+    digit_list = [int(d) for d in potential_list]
+
+    assert check_input_numbers(
+        digit_list) == True, 'digits should be a comma-separated list of numbers in the range 0, 1, ..., 9'
+
+    args.digits = digit_list
+
+    return args
+
+def main():
+    # parse command-line arguments
+
+    args = parse_args()
+
+    if args is None:
+      exit()
+
+    generate_numbers_sequence(args.digits, (args.min, args.max), args.width)
+
+if __name__ == '__main__':
+    main()

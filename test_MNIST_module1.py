@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 import mnistutils as mn
@@ -14,17 +15,6 @@ def test_concat_matrix_lists():
     l2=np.random.randint(0, 10, s2)
     clist=mn.concat_matrix_lists(l1, l2)
     assert len(clist) == s1+s2
-
-# TODO: this throws the following error:
-# TODO: ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
-# TODO: fix ...
-
-#def test_get_mnist_images_digit():
-#    s1=np.random.randint(1, 20)
-#    l1 = np.random.randint(0, 10, s1)
- #   l=mn.get_mnist_images_digit(l1)
- #   len2=len(l1)
- #   assert len2 == len(l)
 
 def test_get_zero_matrix1():
     s1 = np.random.randint(2, 10)
